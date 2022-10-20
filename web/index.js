@@ -34,7 +34,9 @@ Shopify.Context.initialize({
   // This should be replaced with your preferred storage strategy
   // See note below regarding using CustomSessionStorage with this template.
   SESSION_STORAGE: new Shopify.Session.SQLiteSessionStorage(DB_PATH),
-  ...(process.env.SHOP_CUSTOM_DOMAIN && {CUSTOM_SHOP_DOMAINS: [process.env.SHOP_CUSTOM_DOMAIN]}),
+  ...(process.env.SHOP_CUSTOM_DOMAIN && {
+    CUSTOM_SHOP_DOMAINS: [process.env.SHOP_CUSTOM_DOMAIN],
+  }),
 });
 
 // NOTE: If you choose to implement your own storage strategy using

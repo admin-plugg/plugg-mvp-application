@@ -23,7 +23,7 @@ const navigationBarMarkup = (
     <Navigation.Section
       items={[
         {
-          url: "/programs",
+          url: "/",
           label: "Program",
           icon: HomeMinor,
         },
