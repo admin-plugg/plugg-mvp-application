@@ -15,8 +15,7 @@ const logo = {
   accessibilityLabel: "Plugg.Network",
 };
 
-const topBarMarkup = (<TopBar showNavigationToggle >
-</TopBar>);
+const topBarMarkup = <TopBar showNavigationToggle></TopBar>;
 
 const navigationBarMarkup = (
   <Navigation location="/">
@@ -26,21 +25,25 @@ const navigationBarMarkup = (
           url: "/",
           label: "Program",
           icon: HomeMinor,
+          selected: false,
         },
         {
           url: "/rewards",
           label: "Rewards",
           icon: GiftCardMinor,
+          selected: false,
         },
         {
           url: "/redemptions",
           label: "Redemptions",
           icon: ProductsMinor,
+          selected: false,
         },
         {
           url: "/activity",
           label: "Activity",
           icon: ReportMinor,
+          selected: true,
         },
       ]}
     />
@@ -53,6 +56,6 @@ export default function HomePage() {
       logo={logo}
       topBar={topBarMarkup}
       navigation={navigationBarMarkup}
-      ></Frame>
+    ></Frame>
   );
 }

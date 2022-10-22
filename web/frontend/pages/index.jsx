@@ -1,4 +1,4 @@
-import { Frame, Navigation, TopBar, Page, Card } from "@shopify/polaris";
+import { Frame, Navigation, TopBar, Page, Card, Badge } from "@shopify/polaris";
 import {
   HomeMinor,
   ProductsMinor,
@@ -6,6 +6,16 @@ import {
   ReportMinor,
 } from "@shopify/polaris-icons";
 import React from "react";
+
+/*
+TODO:
+1. Add Create & Edit Screen as Modal.
+2. Add actions to Cards.
+3. Add Navigation Actions.
+4. Fix Navigation for Mobile and small Screens.
+5. Fix the Badge alignment issue.
+6. Get Active, Inactive & Expired status in one place and use it to generate badges and actions.
+*/
 
 const logo = {
   width: 35,
@@ -26,21 +36,25 @@ const navigationBarMarkup = (
           url: "/",
           label: "Program",
           icon: HomeMinor,
+          selected: true,
         },
         {
           url: "/rewards",
           label: "Rewards",
           icon: GiftCardMinor,
+          selected: false,
         },
         {
           url: "/redemptions",
           label: "Redemptions",
           icon: ProductsMinor,
+          selected: false,
         },
         {
           url: "/activity",
           label: "Activity",
           icon: ReportMinor,
+          selected: false,
         },
       ]}
     />
@@ -51,31 +65,31 @@ const programs = [
   {
     uuid: "uuid-1",
     id: "1",
-    title: "title 1",
+    title: "Program 1",
     description: "description 1",
-    startDate: null,
-    endDate: null,
+    startDate: 1666454138,
+    endDate: 1666454138,
     isActive: false,
     nft: null,
     merchantId: "sampleId",
   },
   {
-    uuid: "uuid-1",
-    id: "1",
-    title: "title 1",
-    description: "description 1",
-    startDate: null,
-    endDate: null,
+    uuid: "uuid-2",
+    id: "2",
+    title: "Program 2",
+    description: "description 2",
+    startDate: 1666454130,
+    endDate: 1666454138,
     isActive: true,
     nft: null,
     merchantId: "sampleId",
   },
   {
-    uuid: "uuid-1",
-    id: "1",
-    title: "title 1",
-    description: "description 1",
-    startDate: null,
+    uuid: "uuid-3",
+    id: "3",
+    title: "Program 3",
+    description: "description 3",
+    startDate: 1666454138,
     endDate: null,
     isActive: true,
     nft: null,
@@ -83,33 +97,74 @@ const programs = [
   },
 ];
 
-function Programs(props) {
-  const programCards = [];
+function ProgramsAsCards(props) {
+  const activeProgramCards = [],
+    inActiveProgramCards = [];
   props.programs.forEach((program) => {
     if (program.isActive === false) {
-      programCards.push(
-        <Card sectioned title={program.title} subdued>
-          <CardSection description={program.description} />
+      inActiveProgramCards.push(
+        <Card sectioned title={program.title} key={program.id} subdued>
+          <RenderBadgeBasedOnProgramDates program={program} />
+          <Card.Section>
+            <p>{program.description}</p>
+          </Card.Section>
         </Card>
       );
     } else {
-      programCards.push(
-        <Card sectioned title={program.title} primaryFooterAction={{content: 'Delete', destructive: true}} secondaryFooterActions={[{content: 'Edit'}]}>
-          <CardSection description={program.description} />
+      activeProgramCards.push(
+        <Card
+          sectioned
+          title={program.title}
+          key={program.id}
+          primaryFooterAction={{ content: "Delete", destructive: true }}
+          secondaryFooterActions={[{ content: "Edit" }]}
+        >
+          <RenderBadgeBasedOnProgramDates program={program} />
+          <Card.Section>
+            <p>{program.description}</p>
+          </Card.Section>
         </Card>
       );
     }
   });
-  return programCards;
+  return activeProgramCards.concat(inActiveProgramCards);
 }
 
-function CardSection(props) {
-  if (props.description !== null) {
-    return (
-      <Card.Section>
-        <p>props.description</p>
-      </Card.Section>
-    );
+function RenderBadgeBasedOnProgramDates(props) {
+  /*
+  InActive: If isActive flag is False;
+  Active: If isActive flag is True && (endDate === null || endDate > now);
+  Expired: If isActive flag is True; If endDate < now;
+  */
+  let activeBadge = (
+    <Badge status="success" progress="complete">
+      Active
+    </Badge>
+  );
+  let expiredBadge = (
+    <Badge status="warning" progress="partiallyComplete">
+      Expired
+    </Badge>
+  );
+  let inActiveBadge = <Badge progress="complete">Inactive</Badge>;
+  if (props.program === null || props.program.isActive === null) {
+    return;
+  }
+  if (props.program.isActive === false) {
+    return inActiveBadge;
+  }
+  if (props.program.endDate !== null) {
+    let isEndDateValid = new Date(props.program.endDate).getTime() > 0;
+    if (isEndDateValid === false) {
+      return;
+    }
+    if (props.program.endDate < Date.now()) {
+      return expiredBadge;
+    } else {
+      return activeBadge;
+    }
+  } else {
+    return activeBadge;
   }
 }
 
@@ -117,7 +172,7 @@ export default function ProgramsScreen() {
   return (
     <Frame logo={logo} topBar={topBarMarkup} navigation={navigationBarMarkup}>
       <Page fullWidth divider title="Programs">
-        <Programs programs={programs}/>
+        <ProgramsAsCards programs={programs} />
       </Page>
     </Frame>
   );
