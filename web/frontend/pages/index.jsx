@@ -1,11 +1,21 @@
-import { Frame, Navigation, TopBar, Page, Card, Badge } from "@shopify/polaris";
+import {
+  Frame,
+  Navigation,
+  TopBar,
+  Page,
+  Card,
+  Badge,
+  Button,
+} from "@shopify/polaris";
 import {
   HomeMinor,
   ProductsMinor,
   GiftCardMinor,
   ReportMinor,
 } from "@shopify/polaris-icons";
-import React from "react";
+import React, { useState, useCallback, useRef } from "react";
+import { Container, Row, Col } from "react-grid-system";
+import { ProgramModal } from "../components";
 
 /*
 TODO:
@@ -103,27 +113,37 @@ function ProgramsAsCards(props) {
   props.programs.forEach((program) => {
     if (program.isActive === false) {
       inActiveProgramCards.push(
-        <Card sectioned title={program.title} key={program.id} subdued>
-          <RenderBadgeBasedOnProgramDates program={program} />
-          <Card.Section>
-            <p>{program.description}</p>
-          </Card.Section>
-        </Card>
+        <Col key={program.id}>
+          <Card
+            sectioned
+            title={program.title}
+            key={program.id}
+            primaryFooterAction={{ content: "Delete", destructive: true }}
+            subdued
+          >
+            <RenderBadgeBasedOnProgramDates program={program} />
+            <Card.Section>
+              <p>{program.description}</p>
+            </Card.Section>
+          </Card>
+        </Col>
       );
     } else {
       activeProgramCards.push(
-        <Card
-          sectioned
-          title={program.title}
-          key={program.id}
-          primaryFooterAction={{ content: "Delete", destructive: true }}
-          secondaryFooterActions={[{ content: "Edit" }]}
-        >
-          <RenderBadgeBasedOnProgramDates program={program} />
-          <Card.Section>
-            <p>{program.description}</p>
-          </Card.Section>
-        </Card>
+        <Col key={program.id}>
+          <Card
+            sectioned
+            title={program.title}
+            key={program.id}
+            primaryFooterAction={{ content: "Delete", destructive: true }}
+            secondaryFooterActions={[{ content: "Edit" }]}
+          >
+            <RenderBadgeBasedOnProgramDates program={program} />
+            <Card.Section>
+              <p>{program.description}</p>
+            </Card.Section>
+          </Card>
+        </Col>
       );
     }
   });
@@ -169,10 +189,35 @@ function RenderBadgeBasedOnProgramDates(props) {
 }
 
 export default function ProgramsScreen() {
+  const [isModalActive, setModalActive] = useState(false);
+
+  const buttonRef = useRef(null);
+
+  const handleOpen = useCallback(() => setModalActive(true), []);
+
+  const handleClose = useCallback(() => {
+    setModalActive(false);
+  }, []);
+
   return (
     <Frame logo={logo} topBar={topBarMarkup} navigation={navigationBarMarkup}>
-      <Page fullWidth divider title="Programs">
-        <ProgramsAsCards programs={programs} />
+      <Page
+        fullWidth
+        divider
+        title="Programs"
+        subtitle="Your loyalty and rewards programs."
+        primaryAction={
+          <Button primary onClick={handleOpen} ref={buttonRef}>
+            Create
+          </Button>
+        }
+      >
+        <Container fluid>
+          <Row>
+            <ProgramsAsCards programs={programs} />
+            <ProgramModal active={isModalActive} handleClose={handleClose} />
+          </Row>
+        </Container>
       </Page>
     </Frame>
   );

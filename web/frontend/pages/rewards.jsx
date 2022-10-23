@@ -1,4 +1,4 @@
-import { Frame, Navigation, TopBar, Page, Card } from "@shopify/polaris";
+import { Frame, Navigation, TopBar, Page, Card, Button } from "@shopify/polaris";
 import {
   HomeMinor,
   ProductsMinor,
@@ -130,7 +130,16 @@ function RewardsAsCards(props) {
 export default function HomePage() {
   return (
     <Frame logo={logo} topBar={topBarMarkup} navigation={navigationBarMarkup}>
-      <Page fullWidth divider title="Rewards">
+      <Page
+        fullWidth
+        divider
+        title="Rewards"
+        primaryAction={
+          <Button primary>
+            Create
+          </Button>
+        }
+      >
         <RewardsAsCards rewards={rewards} />
       </Page>
     </Frame>
