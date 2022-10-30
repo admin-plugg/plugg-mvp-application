@@ -32,6 +32,9 @@ export default function verifyOrCreateSessionTable(dbCredentials) {
         console.log("Table already Exists!!");
       }
     })
+    .catch((err) => {
+      console.error("Error Occurred" + err.stack);
+    })
     .finally(() => {
       console.log("Promise Setelled");
       client.end();

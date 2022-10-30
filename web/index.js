@@ -12,7 +12,9 @@ import { AppInstallations } from "./app_installations.js";
 import verifyOrCreateSessionTable from "./middleware/verify-or-create-session-table.js";
 import dotenv from 'dotenv';
 
-dotenv.config();
+dotenv.config({
+  path: `${process.cwd()}/../.env.${process.env.NODE_ENV}`
+});
 
 const USE_ONLINE_TOKENS = false;
 
