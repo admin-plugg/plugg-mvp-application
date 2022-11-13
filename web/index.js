@@ -1,6 +1,6 @@
 import { join } from "path";
 import { readFileSync } from "fs";
-import express from "express";
+import express, { response } from "express";
 import cookieParser from "cookie-parser";
 import { Shopify, LATEST_API_VERSION } from "@shopify/shopify-api";
 import applyAuthMiddleware from "./middleware/auth.js";
@@ -10,10 +10,12 @@ import productCreator from "./helpers/product-creator.js";
 import redirectToAuth from "./helpers/redirect-to-auth.js";
 import { AppInstallations } from "./app_installations.js";
 import verifyOrCreateSessionTable from "./middleware/verify-or-create-session-table.js";
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
+import axios from "axios";
+import _ from "lodash";
 
 dotenv.config({
-  path: `${process.cwd()}/../.env.${process.env.NODE_ENV}`
+  path: `${process.cwd()}/../.env.${process.env.NODE_ENV}`,
 });
 
 const USE_ONLINE_TOKENS = false;
@@ -50,10 +52,7 @@ Shopify.Context.initialize({
     process.env.DB_NAME,
     process.env.DB_USER,
     process.env.DB_PASSWORD,
-      (
-        "shopify_sessions",
-        process.env.DB_PORT
-      )
+    ("shopify_sessions", process.env.DB_PORT)
   ),
   ...(process.env.SHOP_CUSTOM_DOMAIN && {
     CUSTOM_SHOP_DOMAINS: [process.env.SHOP_CUSTOM_DOMAIN],
@@ -145,23 +144,53 @@ export async function createServer(
     res.status(200).send(countData);
   });
 
-  app.get("/api/products/create", async (req, res) => {
+  app.get("/api/merchant/getOrcreate", async (req, res) => {
     const session = await Shopify.Utils.loadCurrentSession(
       req,
       res,
       app.get("use-online-tokens")
     );
-    let status = 200;
-    let error = null;
-
-    try {
-      await productCreator(session);
-    } catch (e) {
-      console.log(`Failed to process products/create: ${e.message}`);
-      status = 500;
-      error = e.message;
-    }
-    res.status(status).send({ success: status === 200, error });
+    const { Shop } = await import(
+      `@shopify/shopify-api/dist/rest-resources/${Shopify.Context.API_VERSION}/index.js`
+    );
+    const shop = await Shop.all({
+      session: session,
+    });
+    axios
+      .get(`${process.env.JAVA_SERVER_ENDPOINT}/merchant/shop/${shop[0].id}`)
+      .then((response) => {
+        const data = response.data;
+        if (!_.has(data, "results")) {
+          console.log("Need to create this merchant.");
+          const merchantDto = {
+            name: shop[0].name,
+            email: shop[0].email,
+            phoneno: shop[0].phoneno,
+            shopId: shop[0].id,
+            address: {
+              country: shop[0].country,
+              state: shop[0].province,
+              addressLine1: shop[0].address1,
+              addressLine2: shop[0].address2,
+              postalCode: shop[0].zip,
+            },
+          };
+          console.log("MerchantDto: ", merchantDto);
+          return axios.post(
+            `${process.env.JAVA_SERVER_ENDPOINT}/merchant/`,
+            merchantDto
+          );
+        } else {
+          res.status(200).send(data.results);
+        }
+      })
+      .then((res) => {
+        console.log(res.data.results);
+        res.status(200).send(res.data.results);
+      })
+      .catch((error) => {
+        res.status(500).send(error.data);
+      });
   });
 
   // All endpoints after this point will have access to a request.body
@@ -181,6 +210,22 @@ export async function createServer(
       res.setHeader("Content-Security-Policy", `frame-ancestors 'none';`);
     }
     next();
+  });
+
+  app.post("/api/program", async (req, res) => {
+    let status = 200;
+    let error = null;
+    axios
+      .post(`${process.env.JAVA_SERVER_ENDPOINT}/program/`, req.body)
+      .then((res) => {
+        console.log(res);
+      })
+      .catch((e) => {
+        console.log(`Failed to process program/create: ${e.message}`);
+        status = 500;
+        error = e.message;
+      });
+    res.status(status).send({ success: status === 200, error });
   });
 
   if (isProd) {

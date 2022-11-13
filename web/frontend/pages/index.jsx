@@ -79,6 +79,7 @@ const programs = [
     description: "description 1",
     startDate: 1666454138,
     endDate: 1666454138,
+    type: "1",
     isActive: false,
     nft: null,
     merchantId: "sampleId",
@@ -90,6 +91,7 @@ const programs = [
     description: "description 2",
     startDate: 1666454130,
     endDate: 1666454138,
+    type: "2",
     isActive: true,
     nft: null,
     merchantId: "sampleId",
@@ -101,6 +103,7 @@ const programs = [
     description: "description 3",
     startDate: 1666454138,
     endDate: null,
+    type: "3",
     isActive: true,
     nft: null,
     merchantId: "sampleId",
@@ -111,43 +114,57 @@ function ProgramsAsCards(props) {
   const activeProgramCards = [],
     inActiveProgramCards = [];
   props.programs.forEach((program) => {
+    const programCard = <RenderCardForEachProgram key={program.id} program={program} />;
     if (program.isActive === false) {
-      inActiveProgramCards.push(
-        <Col key={program.id}>
-          <Card
-            sectioned
-            title={program.title}
-            key={program.id}
-            primaryFooterAction={{ content: "Delete", destructive: true }}
-            subdued
-          >
-            <RenderBadgeBasedOnProgramDates program={program} />
-            <Card.Section>
-              <p>{program.description}</p>
-            </Card.Section>
-          </Card>
-        </Col>
-      );
+      inActiveProgramCards.push(programCard);
     } else {
-      activeProgramCards.push(
-        <Col key={program.id}>
-          <Card
-            sectioned
-            title={program.title}
-            key={program.id}
-            primaryFooterAction={{ content: "Delete", destructive: true }}
-            secondaryFooterActions={[{ content: "Edit" }]}
-          >
-            <RenderBadgeBasedOnProgramDates program={program} />
-            <Card.Section>
-              <p>{program.description}</p>
-            </Card.Section>
-          </Card>
-        </Col>
-      );
+      activeProgramCards.push(programCard);
     }
   });
   return activeProgramCards.concat(inActiveProgramCards);
+}
+
+function RenderCardForEachProgram(props) {
+  const [isModalActive, setModalActive] = useState(false);
+
+  const buttonRef = useRef(null);
+
+  const handleOpen = useCallback(() => setModalActive(true), []);
+
+  const handleClose = useCallback(() => {
+    setModalActive(false);
+  }, []);
+  return (
+    <Col key={props.program.id}>
+      <Card
+        sectioned
+        title={props.program.title}
+        key={props.program.id}
+        primaryFooterAction={{ content: "Delete", destructive: true }}
+        secondaryFooterActions={[
+          {
+            content: "Edit",
+            onAction: handleOpen,
+            buttonRef: buttonRef,
+          },
+        ]}
+      >
+        <ProgramModal
+          active={isModalActive}
+          handleClose={handleClose}
+          title={props.program.title}
+          description={props.program.description}
+          startDate={props.program.startDate}
+          endDate={props.program.endDate}
+          selected={props.program.type}
+        />
+        <RenderBadgeBasedOnProgramDates program={props.program} />
+        <Card.Section>
+          <p>{props.program.description}</p>
+        </Card.Section>
+      </Card>
+    </Col>
+  );
 }
 
 function RenderBadgeBasedOnProgramDates(props) {
@@ -215,7 +232,7 @@ export default function ProgramsScreen() {
         <Container fluid>
           <Row>
             <ProgramsAsCards programs={programs} />
-            <ProgramModal active={isModalActive} handleClose={handleClose} />
+            <ProgramModal active={isModalActive} handleClose={handleClose} renderType={"Create"}/>
           </Row>
         </Container>
       </Page>
