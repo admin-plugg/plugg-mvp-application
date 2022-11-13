@@ -1,10 +1,20 @@
-import { Frame, Navigation, TopBar, Page, Card, Button } from "@shopify/polaris";
+import {
+  Frame,
+  Navigation,
+  TopBar,
+  Page,
+  Card,
+  Button,
+} from "@shopify/polaris";
 import {
   HomeMinor,
   ProductsMinor,
   GiftCardMinor,
   ReportMinor,
 } from "@shopify/polaris-icons";
+import React, { useState, useCallback } from "react";
+import { Container, Row } from "react-grid-system";
+import { RewardCard, RewardModal } from "../components";
 
 const logo = {
   width: 35,
@@ -52,95 +62,55 @@ const navigationBarMarkup = (
 
 const rewards = [
   {
-    uuid: "uuid-1",
     id: "1",
     title: "Reward Name 1",
     description: "Reward Description 1",
-    type: {
-      id: "type-1",
-      name: "Discount",
-    },
-    startDate: null,
-    endDate: null,
-    frequencyOfRedemption: {
-      id: "freq-1",
-      name: "Daily",
-    },
-    isActive: false,
-    nft: null,
-    merchantId: "sampleId",
+    numRedemptions: 2,
+    frequencyOfRedemption: "6",
+    isActive: true,
+    programs: [],
   },
   {
-    uuid: "uuid-2",
     id: "2",
     title: "Reward Name 2",
-    description: "Reward Description 1",
-    type: {
-      id: "type-2",
-      name: "Discount",
-    },
-    startDate: null,
-    endDate: null,
-    frequencyOfRedemption: {
-      id: "freq-2",
-      name: "Daily",
-    },
-    isActive: true,
-    nft: null,
-    merchantId: "sampleId",
+    description: "Reward Description 2",
+    numRedemptions: 10,
+    frequencyOfRedemption: "4",
+    isActive: false,
+    programs: [],
   },
 ];
 
-function RewardsAsCards(props) {
-  const activeRewardCards = [],
-    inActiveRewardCards = [];
-  props.rewards.forEach((reward) => {
-    let nftCardImg;
-    if (reward.nft !== null && reward.nft.url !== null) {
-      nftCardImg = <Card.Img variant="top" src={reward.nft.url} />;
-    }
-
-    if (reward.isActive === false) {
-      inActiveRewardCards.push(
-        <Card sectioned title={reward.title} key={reward.id} subdued>
-          <Card.Section>
-            <p>{reward.description}</p>
-          </Card.Section>
-        </Card>
-      );
-    } else {
-      activeRewardCards.push(
-        <Card
-          sectioned
-          title={reward.title}
-          key={reward.id}
-          primaryFooterAction={{ content: "Delete", destructive: true }}
-          secondaryFooterActions={[{ content: "Edit" }]}
-        >
-          <Card.Section>
-            <p>{reward.description}</p>
-          </Card.Section>
-        </Card>
-      );
-    }
-  });
-  return activeRewardCards.concat(inActiveRewardCards);
-}
-
 export default function HomePage() {
+  const [isModalActive, setModalActive] = useState(false);
+  const handleOpen = useCallback(() => setModalActive(true), []);
+  const handleClose = useCallback(() => {
+    setModalActive(false);
+  }, []);
+
   return (
     <Frame logo={logo} topBar={topBarMarkup} navigation={navigationBarMarkup}>
       <Page
         fullWidth
         divider
         title="Rewards"
+        subtitle="Setup different rewards linked to the programs and configure the redemption rate."
         primaryAction={
-          <Button primary>
+          <Button primary onClick={handleOpen}>
             Create
           </Button>
         }
       >
-        <RewardsAsCards rewards={rewards} />
+        <Container fluid>
+          <Row>
+            <RewardCard rewards={rewards} />
+            <RewardModal
+              active={isModalActive}
+              handleClose={handleClose}
+              renderType={"Create"}
+            />
+          </Row>
+        </Container>
       </Page>
     </Frame>
   );
